@@ -1,0 +1,3 @@
+[submodule "routing-service"]
+	path = routing-service
+	url = git@bitbucket.org:flyvictor/routing-service.git
