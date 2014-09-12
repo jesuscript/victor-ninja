@@ -1,10 +1,18 @@
 {
   "name": "victor-api-test",
   "version": "0.0.1",
+  "description": "Victor API test suite",
   "dependencies":{
     "mocha": "~1.20.1",
     "should": "~4.0.4",
     "supertest": "~0.13.0",
-    "sinon": "~1.10.2"
+    "sinon": "~1.10.2",
+    "dotenv": "~0.4.0",
+    "lodash": "~2.4.1",
+    "when": "~3.4.5",
+    "proxyquire": "~1.0.1"
+  },
+  "scripts": {
+    "test": "node_modules/mocha/bin/mocha --recursive -R spec"
   }
 }
