@@ -10,7 +10,9 @@
     "dotenv": "~0.4.0",
     "lodash": "~2.4.1",
     "when": "~3.4.5",
-    "proxyquire": "~1.0.1"
+    "proxyquire": "~1.0.1",
+    "requesto": "~0.0.1",
+    "mongodb": "~1.4.11"
   },
   "scripts": {
     "test": "node_modules/mocha/bin/mocha --recursive -R spec"

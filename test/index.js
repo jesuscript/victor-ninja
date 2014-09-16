@@ -1,16 +1,29 @@
-var setup = require("./setup"),
+var should = require("should"),
+    _ = require("lodash"),
+    setup = require("./setup"),
     util = require("./util");
 
 describe("Victor API", function(){
   before(function(done){
-    this.timeout(6000);
-    setup.initRoutingService(util).then(done);
+    this.timeout(10000);
+
+    setup.initRoutingService(util).then(function(testApp){
+      _.extend(util,{
+        fixtureFactory: testApp.fixtureFactory,
+        request: testApp.httpClient,
+        trustedClient: testApp.trustedFortuneClient,
+        client: testApp.fortuneClient,
+        baseUrl: testApp.baseUrl
+      }, testApp.fixtureFactory, testApp.httpClient);//for convenience
+    }).then(function(){
+      setup.wipeCollections();
+    }).then(done);
   });
   beforeEach(function(){
-    util.disableConsole();
+    //util.disableConsole();
   });
-  afterEach(function(){
-    util.enableConsole();
+  afterEach(function(done){
+    setup.wipeCollections().then(done);
   });
 
   util.requireSpecs(__dirname, ["users"]);
