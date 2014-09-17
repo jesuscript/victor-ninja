@@ -1,28 +1,28 @@
 var should = require("should"),
     _ = require("lodash"),
-    setup = require("./setup"),
-    util = require("./util");
+    setup = require("../lib"),
+    util = _.clone(require("../lib/util")),
+    sinon = require("sinon");
 
 describe("Victor API", function(){
   before(function(done){
     this.timeout(10000);
 
-    setup.initRoutingService(util).then(function(testApp){
-      _.extend(util,{
-        fixtureFactory: testApp.fixtureFactory,
-        request: testApp.httpClient,
-        trustedClient: testApp.trustedFortuneClient,
-        client: testApp.fortuneClient,
-        baseUrl: testApp.baseUrl
-      }, testApp.fixtureFactory, testApp.httpClient);//for convenience
+    setup.initRoutingService().then(function(testApp){
+      _.extend(util,testApp);//for convenience
     }).then(function(){
       setup.wipeCollections();
     }).then(done);
   });
   beforeEach(function(){
-    //util.disableConsole();
+    _.extend(util,{
+      sandbox: sinon.sandbox.create(),
+      clock: sinon.useFakeTimers()
+    });
   });
   afterEach(function(done){
+    util.sandbox.restore();
+    util.clock.restore();
     setup.wipeCollections().then(done);
   });
 

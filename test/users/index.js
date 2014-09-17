@@ -1,37 +1,26 @@
-var proxyquire = require("proxyquire"),
-    when = require("when");
+var when = require("when"),
+    proxyquire = require("proxyquire"),
+    ObjectID = require("mongodb").ObjectID;
 
 module.exports = function(util){
   describe("users", function(){
     var credentials = {
       username: "bob@bob.com",
       password: "password"
-    };
+    }, bob;
 
-    //TODO: replace with a proper register user fixture and mock legacy app
-    proxyquire("../../routing-service/lib/legacy-integration-service/routes",{
-      "./controllers/users": {
-        postUser: function(request){
-          //console.log("post", request.body, typeof request.body);
-          //return when.resolve(JSON.parse(request.body));
-          return when.resolve(request.body);
-        }
-      }
-    });
-    
     beforeEach(function(done){
-      util.create("user",{
+      util.disableConsole();
+      util.fixture.registerUser({
         email: credentials.username,
-        password: credentials.password,
-        dateEmailVerification: new Date()
-      }).then(function(){
+        password: credentials.password
+      }).then(function(data){
+        bob = data.users[0];
+        util.enableConsole();
         done();
       });
     });
 
-    afterEach(function(){
-      //TODO: unproxy
-    });
     it("should be able to authenticate", function(done){
       util.request.post({
         url: "/user-authentication-tokens",
@@ -44,6 +33,45 @@ module.exports = function(util){
         res.body["user-authentication-tokens"][0].token.should.be.a.String;
         done();
       });
+    });
+
+    it("should be able to send a notification", function(done){
+      util.fixture.create("apns-token", {user: bob.id}).then(function(res){
+        var apnsToken = res["apns-tokens"][0],
+            apn = require("../../routing-service/lib/user-service/node_modules/apn"),
+            createDevice = util.sandbox.spy(
+              require("../../routing-service/lib/user-service/logic/apns-token.js"),
+              "createDevice"
+            );
+        
+        util.sandbox.stub(apn.Connection.prototype,"pushNotification", function(notification,device){
+          try{
+            var token = createDevice.args[0][0];
+
+            token.token.should.be.equal(apnsToken.token);
+            token.user.toString().should.be.equal(bob.id);
+            notification.should.be.ok;
+            device.should.be.ok;
+            done();
+          }catch(e){
+            console.trace(e);
+          }
+        });
+
+        util.request.post({
+          url: "/messages",
+          json: {
+            messages:[{
+              sender: bob.id,
+              recipient: bob.id,
+              shortMessage: "hello bob",
+              screen: "/charter-requests"
+            }]
+          }
+        }).then(function(res){
+          util.clock.tick(10000);
+        });
+      }).catch(function(err){ console.trace(err); });;
     });
   });
 };
