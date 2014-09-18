@@ -17,6 +17,6 @@
     "apn": "1.4.4"
   },
   "scripts": {
-    "test": "env SILENT=true node_modules/mocha/bin/mocha --recursive -R spec"
+    "test": "node_modules/mocha/bin/mocha --recursive -R spec"
   }
 }
