@@ -44,7 +44,7 @@ module.exports = function(util){
               "createDevice"
             );
         
-        util.sandbox.stub(apn.Connection.prototype,"pushNotification", function(notification,device){
+        util.sandbox.stub(apn.Connection.prototype,"pushNotification",function(notification,device){
           try{
             var token = createDevice.args[0][0];
 
