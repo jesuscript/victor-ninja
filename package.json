@@ -14,7 +14,8 @@
     "requesto": "~0.0.1",
     "mongodb": "~1.4.11",
     "sinon": "~1.10.3",
-    "apn": "1.4.4"
+    "apn": "1.4.4",
+    "multiline": "~1.0.0"
   },
   "scripts": {
     "test": "node_modules/mocha/bin/mocha --recursive -R spec"

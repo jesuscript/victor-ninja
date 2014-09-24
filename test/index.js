@@ -18,14 +18,13 @@ describe("Victor API", function(){
   });
 
   beforeEach(function(){
-    testApp.setupFakes();
+    testApp.setupSandbox();
   });
 
   afterEach(function(done){
     testApp.reset();
-    
     testApp.wipeCollections().then(done);
   });
 
-  util.requireSpecs(__dirname, ["users"], [testApp]);
+  util.requireSpecsInDir(__dirname, __filename, [testApp]);
 });

@@ -13,5 +13,11 @@ module.exports = {
   "apns-token":{
     "token": "abc-123",
     sandbox: false
+  },
+  quote: {
+  },
+  "quote-leg": {
+  },
+  flight: {
   }
 };

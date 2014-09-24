@@ -13,8 +13,8 @@ module.exports = function(testApp){
       testApp.fixture.registerUser({
         email: credentials.username,
         password: credentials.password
-      }).then(function(data){
-        bob = data.users[0];
+      }).then(function(user){
+        bob = user;
         done();
       });
     });
@@ -34,7 +34,11 @@ module.exports = function(testApp){
     });
 
     it("should be able to send a notification", function(done){
-      testApp.fixture.create("apns-token", {user: bob.id}).then(function(res){
+      testApp.setupClock();
+
+      testApp.request.signInAs(bob).then(function(){
+        return testApp.fixture.create("apns-token", {user: bob.id});
+      }).then(function(res){
         var apnsToken = res["apns-tokens"][0],
             apn = require("../../routing-service/lib/user-service/node_modules/apn"),
             createDevice = testApp.sandbox.spy(
@@ -69,7 +73,7 @@ module.exports = function(testApp){
         }).then(function(res){
           testApp.clock.tick(10000);
         });
-      }).catch(function(err){ console.trace(err); });;
+      }).catch(function(err){ console.trace(err); });
     });
   });
 };
