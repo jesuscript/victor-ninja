@@ -19,5 +19,8 @@ module.exports = {
   "quote-leg": {
   },
   flight: {
+  },
+  "payment-provider":{
+    name: "stripe"
   }
 };

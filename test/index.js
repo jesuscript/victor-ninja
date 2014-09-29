@@ -10,7 +10,7 @@ describe("Victor API", function(){
       fakes = {};
   
   before(function(done){
-    this.timeout(10000);
+    this.timeout(10000);// the first run may be quite slow, but consequent runs are much faster
 
     testApp.initRoutingService().then(function(){
       testApp.wipeCollections();
@@ -26,5 +26,6 @@ describe("Victor API", function(){
     testApp.wipeCollections().then(done);
   });
 
+  //would be neat to make this a default for tests. not sure how yet
   util.requireSpecsInDir(__dirname, __filename, [testApp]);
 });
