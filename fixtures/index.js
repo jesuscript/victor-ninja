@@ -15,7 +15,19 @@ module.exports = {
     sandbox: false
   },
   quote: {
-    
+    quoteType: "Charter",
+    isBooked: false,
+    price: {
+      amount: 1296,
+      currency: "EUR"
+    },
+    netPrice: {
+      amount: 1234,
+      currency: "EUR"
+    },
+    isVisibleToUser: true,
+    seatsOnJet: 4,
+    seatsToConfirm: 0 //??
   },
   "quote-leg": {
   },
