@@ -32,7 +32,7 @@ module.exports = function(testApp){
     });
 
     describe("payment fees", function(){
-      var paymentFees, amexFee, visaFee;
+      var paymentFees, amexFee, visaFee, quoteFeeRequestBody;
       
       var skrillFeePercent = 20,
           stripeFeePercent = 10;
@@ -63,7 +63,9 @@ module.exports = function(testApp){
             }
           });
         }).then(function(res){
-          var paymentFees = res.body.linked["payment-fees"];
+          quoteFeeRequestBody = res.body;
+          
+          var paymentFees = quoteFeeRequestBody.linked["payment-fees"];
 
           paymentFees.length.should.be.equal(2);
 
@@ -85,6 +87,11 @@ module.exports = function(testApp){
         visaFee.links.quote.should.be.equal(quote.id);
         
         done();
+      });
+
+      it("are linked to by quote", function(){
+        _.intersection(quoteFeeRequestBody.quotes[0].paymentFees, [visaFee.id,amexFee.id]).length
+          .should.be.equal(2);
       });
 
       it("are calculated correctly", function(){

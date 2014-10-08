@@ -35,5 +35,9 @@ module.exports = {
   },
   "payment-provider":{
     name: "stripe"
+  },
+  "payment-type":{
+    name: "visa",
+    feePercent: 10
   }
 };
