@@ -58,8 +58,7 @@ module.exports = function(testApp, opt){
       describe("once registered", function(){
         it("creates a card resource", function(){
           card.links.user.should.be.equal(opt.bob.id);
-          card.links.cardTokens.length.should.be.equal(1);
-          card.links.cardTokens[0].should.be.equal(cardToken.id);
+          card.links.cardToken.should.be.equal(cardToken.id);
           card.links.paymentProvider.should.be.equal(paymentProvider.id);
           card.links.paymentType.should.be.equal(paymentType.id);
           card.usageType.should.be.equal(usageType);
@@ -80,48 +79,22 @@ module.exports = function(testApp, opt){
         });
       });
 
-      describe("once paid @now", function(){
+      describe("once paid", function(){
         var quote, charge;
         
         beforeEach(function(done){
           this.timeout(5000);
-          
-          testApp.fixture.create("quote", {
-            user: opt.bob.id
-          }).then(function(data){
-            quote = data.quotes[0];
 
-            return testApp.request.post({
-              url: "/charges",
-              json: {
-                charges: [{
-                  card: card.id,
-                  quote: quote.id
-                }]
-              }
-            });
-          }).then(function(){
-            return testApp.request.get("/cards/"+card.id+"/charges");
-          }).then(function(res){
-            var charges = res.body.charges;
-            charges.length.should.be.equal(1);
-            charge = charges[0];
+          opt.createQuoteAndCharge(card).then(function(data){
+            quote = data.quote;
+            charge = data.charge
+
             done();
           });
         });
         
-        it("creates a charge", function(done){
-          charge.links.quote.should.be.equal(quote.id);
-          charge.links.card.should.be.equal(card.id)
-          charge.links.paymentType.should.equal(paymentType.id);
-          
-          charge.amount.amount.should.be.equal(
-            Math.round((1 + paymentType.feePercent/100) * quote.price.amount * 100) / 100
-          );
-          charge.amount.currency.should.be.equal(quote.price.currency);
-          charge.refunded.should.be.equal(false);
-          charge.paid.should.be.equal(true);
-          done();
+        it("creates a charge", function(){
+          opt.testCharge(charge,quote,card,paymentType);
         });
       });
     });

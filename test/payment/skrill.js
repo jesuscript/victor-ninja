@@ -2,8 +2,9 @@ var requesto = require("requesto");
 
 module.exports = function(testApp, opt){
   describe("with skrill", function(){
-    var skrillRegUrl, skrillCCUrl, tokenData, paymentProvider,
-        usageType = "personal";
+    var skrillRegUrl, skrillCCUrl, tokenData, paymentProvider, cards, card,paymentType,
+        usageType = "personal",
+        cvv = 123;
     
     beforeEach(function(done){
       skrillRegUrl = process.env.SKRILL_JSON_RPC_URL + process.env.SKRILL_MERCHANT_ID + "/" +
@@ -20,7 +21,7 @@ module.exports = function(testApp, opt){
             "account": {
               "number": "4111111111111111",
               "expiry": "10/2016",
-              "cvv": "123"
+              "cvv": cvv
             }
           },
           "id": 1
@@ -32,11 +33,14 @@ module.exports = function(testApp, opt){
       }).then(function(data){
         paymentProvider = data["payment-providers"][0];
 
+        return testApp.fixture.create("payment-type", {paymentProvider: paymentProvider.id})
+      }).then(function(data){
+        paymentType = data["payment-types"][0];
         return testApp.request.post({
           url: "/card-tokens",
           json: {
             "card-tokens": [{
-              paymentProvider: paymentProvider.id,
+              paymentType: paymentType.id,
               token: tokenData.token,
               cardUsageType: usageType,
               user: opt.bob.id,
@@ -46,34 +50,55 @@ module.exports = function(testApp, opt){
             }]
           }
         });
-      }).then(function(){
+      }).catch(function(err){ console.trace(err); }).then(function(){
+        return testApp.request.get("/users/"+opt.bob.id+"/cards");
+      }).then(function(data){
+        cards = data.body.cards;
+        card = cards[0];
+
+        cards.length.should.be.equal(1);
+        
         done();
+      }).catch(function(err){ console.trace(err); });
+    });
+
+    describe("once registered", function(){
+      it("creates a card resource", function(){
+        card.links.user.should.be.equal(opt.bob.id);
+        card.links.cardToken.should.be.equal(tokenData.token);
+        card.links.paymentType.should.be.equal(paymentType.id);
+        card.usageType.should.be.equal(usageType);
+        card.last4.should.be.equal("1111");
+        card.expiresAt.should.be.eql({
+          date: "" + tokenData.expiry_year + "-" + tokenData.expiry_month + "-01",
+          time: "00:00",
+          timeZone: 0
+        });
       });
     });
-    describe("once registered", function(){
-      it("creates a card resource", function(done){
-        return testApp.request.get("/users/"+opt.bob.id+"/cards").then(function(data){
-          var cards = JSON.parse(data.body).cards,
-              card = cards[0];
 
-          cards.length.should.be.equal(1);
-          card.links.user.should.be.equal(opt.bob.id);
-          card.links.cardTokens.length.should.be.equal(1);
-          card.links.cardTokens[0].should.be.equal(tokenData.token);
-          card.links.paymentProvider.should.be.equal(paymentProvider.id);
-          card.usageType.should.be.equal(usageType);
-          card.last4.should.be.equal("1111");
-          card.expiresAt.should.be.eql({
-            date: "" + tokenData.expiry_year + "-" + tokenData.expiry_month + "-01",
-            time: "00:00",
-            timeZone: 0
-          });
+    describe("once paid", function(){
+      var quote, charge;
+      
+      beforeEach(function(done){
+        this.timeout(5000);
 
+        opt.createQuoteAndCharge(card,{cvv: cvv}).then(function(data){
+          quote = data.quote;
+          charge = data.charge;
 
           done();
-        }).catch(function(err){ console.trace(err); });
+        });
+      });
 
-        done();
+      it("creates a charge", function(){
+        opt.testCharge(charge,quote,card,paymentType);
+
+        charge.cvv.should.be.equal(cvv);
+        charge.additionalDetails.providerInfo.uniqueid.should.be.ok;
+        charge.additionalDetails.providerInfo.shortid.should.be.ok;
+        charge.additionalDetails.providerInfo.method.should.be.equal("creditcard");
+        charge.additionalDetails.providerInfo.type.should.be.equal("debit");
       });
     });
   });
