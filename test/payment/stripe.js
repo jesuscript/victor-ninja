@@ -87,7 +87,7 @@ module.exports = function(testApp, opt){
 
           opt.createQuoteAndCharge(card).then(function(data){
             quote = data.quote;
-            charge = data.charge
+            charge = data.charge;
 
             done();
           });
@@ -95,6 +95,29 @@ module.exports = function(testApp, opt){
         
         it("creates a charge", function(){
           opt.testCharge(charge,quote,card,paymentType);
+        });
+
+        //DRY
+        describe("transaction", function(){
+          var transaction, transactionItems;
+          
+          beforeEach(function(done){
+            testApp.trustedFortuneClient.getTransactions({user: opt.bob.id.toString()},{
+              include: "transactionItems"
+            }).then(function(data){
+              transaction = data.transactions[0];
+              transactionItems = data.linked["transaction-items"];
+              done();
+            });
+          });
+
+          it("should exist", function(){
+            transaction.should.be.ok;
+          });
+
+          it("should have a transaction item", function(){
+            transactionItems.length.should.be.equal(1);
+          });
         });
       });
     });

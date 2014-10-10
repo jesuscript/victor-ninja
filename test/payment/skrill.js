@@ -100,6 +100,29 @@ module.exports = function(testApp, opt){
         charge.additionalDetails.providerInfo.method.should.be.equal("creditcard");
         charge.additionalDetails.providerInfo.type.should.be.equal("debit");
       });
+
+      //DRY
+      describe("transaction", function(){
+        var transaction, transactionItems;
+        
+        beforeEach(function(done){
+          testApp.trustedFortuneClient.getTransactions({user: opt.bob.id.toString()},{
+            include: "transactionItems"
+          }).then(function(data){
+            transaction = data.transactions[0];
+            transactionItems = data.linked["transaction-items"];
+            done();
+          });
+        });
+
+        it("should exist", function(){
+          transaction.should.be.ok;
+        });
+
+        it("should have a transaction item", function(){
+          transactionItems.length.should.be.equal(1);
+        });
+      });
     });
   });
 };

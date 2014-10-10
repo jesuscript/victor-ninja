@@ -1,4 +1,9 @@
-var util = require("../../lib/util");
+var util = require("../../lib/util"),
+    timedRequest = require(
+      "../../routing-service/lib/legacy-integration-service/legacyWrappers/timed-request.js"),
+    lisHelpers = require(
+      "../../routing-service/lib/legacy-integration-service/legacyWrappers/helpers.js"),
+    when = require("when");
 
 module.exports = function(testApp){
   describe("payment", function(){
@@ -48,8 +53,16 @@ module.exports = function(testApp){
         charge.providerReference.should.be.ok;
       }
     };
-    
+
     beforeEach(function(done){
+      testApp.sandbox.stub(timedRequest,"post",function(opt){
+        return when(mockPaymentConfirmation(opt));
+      });
+
+      testApp.sandbox.stub(lisHelpers, "getResource", function(reqUrl){
+        return when(mockTransaction());
+      });
+
       testApp.fixture.registerUser({
         email: "bob@bob.com",
         password: "password"
@@ -59,7 +72,97 @@ module.exports = function(testApp){
         done();
       });
     });
-    
-    util.requireSpecsInDir(__dirname, [__filename], [testApp, opt]);
+
+    util.requireSpecsInDir(__dirname, [__filename, "transaction"], [testApp, opt]);
   });
+
+  function mockPaymentConfirmation(opt){
+    var amount = opt.qs.amountStr.replace(/,/g,"").replace(/\\/g,""),
+        currency = opt.qs.currency.replace(/,/g,"").replace(/\\/g,"");
+    
+    return {
+      body: JSON.stringify({
+        "SiteVersion": 2,
+        "RepeatInfo": null,
+        "IsRepeatable": false,
+        "AmountPaid": amount,
+        "AmountToCharge": amount,
+        "Country": null,
+        "Region": null,
+        "PostCode": null,
+        "City": null,
+        "AddressLine2": null,
+        "AddressLine1": null,
+        "LastName": null,
+        "FirstNames": null,
+        "RedirectUrl": null,
+        "SecurityKey": null,
+        "FullResponse": null,
+        "PaymentSystemOrderId": null,
+        "PaymentSystemTransactionId": null,
+        "PaymentSystemUniqueId": null,
+        "ResponseDetails": null,
+        "ResponseDate": null,
+        "RequestDate": (new Date()).toISOString(),
+        "ClientIP": null,
+        "ClientIPType": null,
+        "Currency": currency,
+        "VictorUniqueId": null,
+        "TransactionType": "PAYMENT",
+        "TransactionCompleted": false,
+        "TransactionState": "InitialRequestPending",
+        "OrderState": "Charged",
+        "PaymentSystemId": null,
+        "UserId": opt.qs.userId,
+        "RepeatTransactionParentId": null,
+        "TransactionId": 13411,
+        "odata.metadata": "https:\/\/v2-dev.flyvictor.com\/Services\/WcfDataService.svc\/$metadata#Transactions\/@Element"
+      })
+    };
+  }
+
+  function mockTransaction(){
+    return {
+      "value": [
+        {
+          "PaymentRuleDifference": "0.0000",
+          "PaymentRuleTitle": null,
+          "MarkUp": 0.0,
+          "ExchangeRate": 1.0,
+          "TotalPaid": "1050.0000",
+          "Total": "1050.0000",
+          "Amount": "1050.0000",
+          "PaidCurrencyId": 2,
+          "BaseCurrencyId": 2,
+          "BaseTotal": "1050.0000",
+          "BaseAmount": "1050.0000",
+          "Quantity": 1,
+          "Properties": null,
+          "OrderTypeAssembly": "JetShare.Business.Payment.QuoteOrder, JetShare.Business, Version=1.0.4306.0, Culture=neutral, PublicKeyToken=null",
+          "OrderType": "Quote",
+          "EntityId": 51750,
+          "TransactionId": 13411,
+          "TransactionItemId": 14726,
+          "PaidCurrency": {
+            "IsVisible": true,
+            "CurrencyImageUrl": "",
+            "CurrencyCode": "EUR",
+            "CurrencySymbol": "\u20ac",
+            "CurrencyName": "Euros (\u20ac)",
+            "CurrencyId": 2
+          },
+          "BaseCurrency": {
+            "IsVisible": true,
+            "CurrencyImageUrl": "",
+            "CurrencyCode": "EUR",
+            "CurrencySymbol": "\u20ac",
+            "CurrencyName": "Euros (\u20ac)",
+            "CurrencyId": 2
+          }
+        }
+      ],
+      "odata.metadata": "https:\/\/v2-dev.flyvictor.com\/Services\/WcfDataService.svc\/$metadata#TransactionItems"
+    };
+    
+  }
 };

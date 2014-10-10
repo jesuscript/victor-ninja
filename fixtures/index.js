@@ -8,7 +8,10 @@ module.exports = {
     "languageCode":"en-GB",
     "email":"hoanglonguk+1231@gmail.com",
     "charterFrequency":{"min":1,"max":10},
-    "lastName":"Asddas"
+    "lastName":"Asddas",
+    additionalDetails: {
+      legacyID: 1
+    }
   },
   "apns-token":{
     "token": "abc-123",
@@ -27,7 +30,10 @@ module.exports = {
     },
     isVisibleToUser: true,
     seatsOnJet: 4,
-    seatsToConfirm: 0 //??
+    seatsToConfirm: 0, //??
+    additionalDetails: {
+      legacyID: 1
+    }
   },
   "quote-leg": {
   },

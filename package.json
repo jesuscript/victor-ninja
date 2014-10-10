@@ -16,7 +16,8 @@
     "sinon": "~1.10.3",
     "apn": "1.4.4",
     "multiline": "~1.0.0",
-    "stripe": "~2.8.0"
+    "stripe": "~2.8.0",
+    "rewire": "~2.1.0"
   },
   "scripts": {
     "test": "node_modules/mocha/bin/mocha --recursive -R spec"
