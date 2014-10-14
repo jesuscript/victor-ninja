@@ -1,4 +1,5 @@
-var requesto = require("requesto");
+var requesto = require("requesto"),
+    util = require("../../lib/util");
 
 module.exports = function(testApp, opt){
   describe("with skrill", function(){
@@ -33,20 +34,22 @@ module.exports = function(testApp, opt){
       }).then(function(data){
         paymentProvider = data["payment-providers"][0];
 
-        return testApp.fixture.create("payment-type", {paymentProvider: paymentProvider.id})
+        return testApp.fixture.create("payment-type", {paymentProvider: paymentProvider.id});
       }).then(function(data){
         paymentType = data["payment-types"][0];
         return testApp.request.post({
           url: "/card-tokens",
           json: {
             "card-tokens": [{
-              paymentType: paymentType.id,
               token: tokenData.token,
               cardUsageType: usageType,
-              user: opt.bob.id,
               last4: tokenData.last,
               expiryYear: tokenData.expiry_year,
-              expiryMonth: tokenData.expiry_month
+              expiryMonth: tokenData.expiry_month,
+              links: {
+                paymentType: paymentType.id,
+                user: opt.bob.id
+              }
             }]
           }
         });
@@ -83,7 +86,7 @@ module.exports = function(testApp, opt){
       beforeEach(function(done){
         this.timeout(5000);
 
-        opt.createQuoteAndCharge(card,{cvv: cvv}).then(function(data){
+        opt.createQuoteAndCharge({cvv: cvv, cardId: card.id}).then(function(data){
           quote = data.quote;
           charge = data.charge;
 
@@ -101,7 +104,6 @@ module.exports = function(testApp, opt){
         charge.additionalDetails.providerInfo.type.should.be.equal("debit");
       });
 
-      //DRY
       describe("transaction", function(){
         var transaction, transactionItems;
         

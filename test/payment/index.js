@@ -8,7 +8,7 @@ var util = require("../../lib/util"),
 module.exports = function(testApp){
   describe("payment", function(){
     var opt = {
-      createQuoteAndCharge: function(card,chargeData){
+      createQuoteAndCharge: function(chargeData){
         var result = {};
 
         chargeData = chargeData || {};
@@ -17,21 +17,23 @@ module.exports = function(testApp){
           user: opt.bob.id
         }).then(function(data){
           result.quote = data.quotes[0];
-
           return testApp.request.post({
             url: "/charges",
             json: {
               charges: [{
-                card: card.id,
-                quote: result.quote.id,
+                links: {
+                  card: chargeData.cardId,
+                  paymentType: chargeData.paymentType,
+                  quote: result.quote.id
+                },
                 cvv: chargeData.cvv
               }]
             }
           });
         }).then(function(){
-          return testApp.request.get("/cards/"+card.id+"/charges");
-        }).then(function(res){
-          var charges = res.body.charges;
+          return testApp.trustedFortuneClient.getCharges({quote: result.quote.id.toString()});
+        }).then(function(data){
+          var charges = data.charges;
           charges.length.should.be.equal(1);
           result.charge = charges[0];
 
@@ -40,7 +42,7 @@ module.exports = function(testApp){
       },
       testCharge: function(charge,quote,card,paymentType){
         charge.links.quote.should.be.equal(quote.id);
-        charge.links.card.should.be.equal(card.id)
+        if(card) charge.links.card.should.be.equal(card.id);
         charge.links.paymentType.should.equal(paymentType.id);
         
         charge.amount.amount.should.be.equal(
@@ -48,9 +50,8 @@ module.exports = function(testApp){
         );
         charge.amount.currency.should.be.equal(quote.price.currency);
         charge.refunded.should.be.equal(false);
-        charge.paid.should.be.equal(true);
-
-        charge.providerReference.should.be.ok;
+        
+        if(card) charge.providerReference.should.be.ok;
       }
     };
 
@@ -73,7 +74,7 @@ module.exports = function(testApp){
       });
     });
 
-    util.requireSpecsInDir(__dirname, [__filename, "transaction"], [testApp, opt]);
+    util.requireSpecsInDir(__dirname, [__filename], [testApp, opt]);
   });
 
   function mockPaymentConfirmation(opt){
