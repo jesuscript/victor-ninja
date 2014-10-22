@@ -1,16 +1,11 @@
 var _ = require("lodash");
 
-module.exports = function(testApp){
+module.exports = function(testApp, testOpt){
   describe("quote", function(){
-    var quote,
-        opts = {};
+    var quote;
     
     beforeEach(function(done){
-      testApp.fixture.registerAndSignIn().then(function(user){
-        opts.user = user;
-
-        return testApp.fixture.create("quote",{user: user.id});
-      }).then(function(data){
+      return testApp.fixture.create("quotes",{user: testOpt.bob.id}).then(function(data){
         quote = data.quotes[0];
         done();
       }).catch(function(err){ console.trace(err); });
@@ -39,21 +34,15 @@ module.exports = function(testApp){
 
       beforeEach(function(done){
         
-        testApp.fixture.create("payment-provider",[{
-          name: "skrill"
-        },{
-          name: "stripe"
+        testApp.fixture.create("payment-types", [{
+          name: "visa",
+          paymentProvider: testApp.fixture.create("payment-providers",{ name: "stripe" }),
+          feePercent: stripeFeePercent
+        }, {
+          name: "amex",
+          paymentProvider: testApp.fixture.create("payment-providers",{ name: "skrill" }),
+          feePercent: skrillFeePercent
         }]).then(function(){
-          return testApp.fixture.create("payment-type", [{
-            name: "visa",
-            paymentProvider: "stripe",
-            feePercent: stripeFeePercent
-          }, {
-            name: "amex",
-            paymentProvider: "skrill",
-            feePercent: skrillFeePercent
-          }]);
-        }).then(function(){
           //TODO: nest this under "when requested for a quote"
 
           return testApp.request.get({
@@ -77,9 +66,7 @@ module.exports = function(testApp){
 
           amexFee = feeForType("amex"),
           visaFee = feeForType("visa");
-
-          done();
-        });
+        }).then(done);
       });
       
       it("link to a quote", function(done){
@@ -90,8 +77,9 @@ module.exports = function(testApp){
       });
 
       it("are linked to by quote", function(){
-        _.intersection(quoteFeeRequestBody.quotes[0].paymentFees, [visaFee.id,amexFee.id]).length
-          .should.be.equal(2);
+        _.intersection(
+          quoteFeeRequestBody.quotes[0].links.paymentFees,[visaFee.id,amexFee.id]
+        ).length.should.be.equal(2);
       });
 
       it("are calculated correctly", function(){

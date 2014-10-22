@@ -1,18 +1,17 @@
-var requesto = require("requesto"),
-    util = require("../../lib/util");
+var requesto = require("requesto");
 
 module.exports = function(testApp, opt){
   describe("with skrill", function(){
     var skrillRegUrl, skrillCCUrl, tokenData, paymentProvider, cards, card,paymentType,
         usageType = "personal",
-        cvv = 123;
+        cvv = 1234;
     
     beforeEach(function(done){
       skrillRegUrl = process.env.SKRILL_JSON_RPC_URL + process.env.SKRILL_MERCHANT_ID + "/" +
         process.env.SKRILL_CREDITCARD_REGISTER_CHANNEL_ID + "/creditcard/",
       skrillCCUrl = process.env.SKRILL_JSON_RPC_URL + process.env.SKRILL_MERCHANT_ID + "/" +
         process.env.SKRILL_CREDITCARD_CHANNEL_ID + "/creditcard/";
-      
+
       requesto.post({
         url: skrillRegUrl,
         json: {
@@ -20,8 +19,8 @@ module.exports = function(testApp, opt){
           "method": "register",
           "params": {
             "account": {
-              "number": "4111111111111111",
-              "expiry": "10/2016",
+              "number": "370000000000002",
+              "expiry": "10/2014",
               "cvv": cvv
             }
           },
@@ -30,13 +29,14 @@ module.exports = function(testApp, opt){
       }).then(function(res){
         tokenData = res.body.result.account;
         
-        return testApp.fixture.create("payment-provider", {name: "skrill"});
+        return testApp.fixture.create("payment-providers", {name: "skrill"});
       }).then(function(data){
         paymentProvider = data["payment-providers"][0];
 
-        return testApp.fixture.create("payment-type", {paymentProvider: paymentProvider.id});
+        return testApp.fixture.create("payment-types", {paymentProvider: paymentProvider.id});
       }).then(function(data){
         paymentType = data["payment-types"][0];
+
         return testApp.request.post({
           url: "/card-tokens",
           json: {
@@ -71,7 +71,7 @@ module.exports = function(testApp, opt){
         card.links.cardToken.should.be.equal(tokenData.token);
         card.links.paymentType.should.be.equal(paymentType.id);
         card.usageType.should.be.equal(usageType);
-        card.last4.should.be.equal("1111");
+        card.last4.should.be.equal("0002");
         card.expiresAt.should.be.eql({
           date: "" + tokenData.expiry_year + "-" + tokenData.expiry_month + "-01",
           time: "00:00",
@@ -108,7 +108,7 @@ module.exports = function(testApp, opt){
         var transaction, transactionItems;
         
         beforeEach(function(done){
-          testApp.trustedFortuneClient.getTransactions({user: opt.bob.id.toString()},{
+          testApp.fortuneClient.getTransactions({user: opt.bob.id.toString()},{
             include: "transactionItems"
           }).then(function(data){
             transaction = data.transactions[0];

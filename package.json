@@ -5,19 +5,18 @@
   "dependencies":{
     "mocha": "~1.20.1",
     "should": "~4.0.4",
-    "supertest": "~0.13.0",
     "sinon": "~1.10.2",
     "dotenv": "~0.4.0",
     "lodash": "~2.4.1",
     "when": "~3.4.5",
     "proxyquire": "~1.0.1",
-    "requesto": "~0.0.1",
-    "mongodb": "~1.4.11",
     "sinon": "~1.10.3",
     "apn": "1.4.4",
     "multiline": "~1.0.0",
     "stripe": "~2.8.0",
-    "rewire": "~2.1.0"
+    "rewire": "~2.1.0",
+    "requesto": "~0.0.1",
+    "fortune-ninja": "~0.0.1"
   },
   "scripts": {
     "test": "node_modules/mocha/bin/mocha --recursive -R spec"

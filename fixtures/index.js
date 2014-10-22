@@ -1,13 +1,14 @@
 module.exports = {
   user: {
-    "phone":"1234",
+    "phone":"1234567890",
     "password":"password",
     "firstName":"",
-    "country":"af",
+    "country":"UK",
     "title":"Mr",
     "languageCode":"en-GB",
     "email":"hoanglonguk+1231@gmail.com",
     "charterFrequency":{"min":1,"max":10},
+    verifiedAt: new Date(),//TODO: make dynamic
     "lastName":"Asddas",
     additionalDetails: {
       legacyID: 1
@@ -22,11 +23,11 @@ module.exports = {
     isBooked: false,
     price: {
       amount: 1296,
-      currency: "EUR"
+      currency: "GBP"
     },
     netPrice: {
       amount: 1234,
-      currency: "EUR"
+      currency: "GBP"
     },
     isVisibleToUser: true,
     seatsOnJet: 4,

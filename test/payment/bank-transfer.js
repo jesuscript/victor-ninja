@@ -4,7 +4,7 @@ module.exports = function(testApp,opt){
       var paymentType, quote, charge;
       
       beforeEach(function(done){
-        testApp.fixture.create("payment-type",{
+        testApp.fixture.create("payment-types",{
           name: "bankTransfer",
           additionalDetails: [{
             bankDetails: [{
@@ -34,7 +34,7 @@ module.exports = function(testApp,opt){
         var transaction, transactionItems;
         
         beforeEach(function(done){
-          testApp.trustedFortuneClient.getTransactions({user: opt.bob.id.toString()},{
+          testApp.fortuneClient.getTransactions({user: opt.bob.id.toString()},{
             include: "transactionItems"
           }).then(function(data){
             transaction = data.transactions[0];

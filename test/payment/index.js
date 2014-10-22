@@ -1,11 +1,11 @@
-var util = require("../../lib/util"),
-    timedRequest = require(
+var timedRequest = require(
       "../../routing-service/lib/legacy-integration-service/legacyWrappers/timed-request.js"),
     lisHelpers = require(
       "../../routing-service/lib/legacy-integration-service/legacyWrappers/helpers.js"),
+    _ = require("lodash"),
     when = require("when");
 
-module.exports = function(testApp){
+module.exports = function(testApp,parentOpt){
   describe("payment", function(){
     var opt = {
       createQuoteAndCharge: function(chargeData){
@@ -13,7 +13,7 @@ module.exports = function(testApp){
 
         chargeData = chargeData || {};
         
-        return testApp.fixture.create("quote", {
+        return testApp.fixture.create("quotes", {
           user: opt.bob.id
         }).then(function(data){
           result.quote = data.quotes[0];
@@ -26,12 +26,13 @@ module.exports = function(testApp){
                   paymentType: chargeData.paymentType,
                   quote: result.quote.id
                 },
-                cvv: chargeData.cvv
+                cvv: chargeData.cvv,
+                invoiceRequired: true
               }]
             }
           });
         }).then(function(){
-          return testApp.trustedFortuneClient.getCharges({quote: result.quote.id.toString()});
+          return testApp.fortuneClient.getCharges({quote: result.quote.id.toString()});
         }).then(function(data){
           var charges = data.charges;
           charges.length.should.be.equal(1);
@@ -55,7 +56,7 @@ module.exports = function(testApp){
       }
     };
 
-    beforeEach(function(done){
+    beforeEach(function(){
       testApp.sandbox.stub(timedRequest,"post",function(opt){
         return when(mockPaymentConfirmation(opt));
       });
@@ -64,17 +65,10 @@ module.exports = function(testApp){
         return when(mockTransaction());
       });
 
-      testApp.fixture.registerUser({
-        email: "bob@bob.com",
-        password: "password"
-      }).then(function(user){
-        return testApp.request.signInAs(opt.bob = user);
-      }).then(function(){
-        done();
-      });
+      _.extend(opt,parentOpt);
     });
 
-    util.requireSpecsInDir(__dirname, [__filename], [testApp, opt]);
+    testApp.util.requireSpecsInDir(__dirname, [__filename], [testApp, opt]);
   });
 
   function mockPaymentConfirmation(opt){

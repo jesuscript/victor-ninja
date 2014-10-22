@@ -21,12 +21,15 @@ module.exports = function(testApp,opt){
         if(err){
           throw new Error(err);
         } else {
-          testApp.fixture.create("payment-provider", {name: "stripe"}).then(function(data){
+          testApp.fixture.create("payment-providers", {name: "stripe"}).then(function(data){
             paymentProvider = data["payment-providers"][0];
 
-            return testApp.fixture.create("payment-type", {
+            return testApp.fixture.create("payment-types", [{
               paymentProvider: paymentProvider.id
-            });
+            },{
+              paymentProvider: paymentProvider.id,
+              name: "somerandomshit"
+            }]);
           }).then(function(data){
             paymentType = data["payment-types"][0];
             return testApp.request.post({ //creating a card
@@ -104,7 +107,7 @@ module.exports = function(testApp,opt){
         var transaction, transactionItems;
         
         beforeEach(function(done){
-          testApp.trustedFortuneClient.getTransactions({user: opt.bob.id.toString()},{
+          testApp.fortuneClient.getTransactions({user: opt.bob.id.toString()},{
             include: "transactionItems"
           }).then(function(data){
             transaction = data.transactions[0];
