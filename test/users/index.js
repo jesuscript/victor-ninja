@@ -29,7 +29,7 @@ module.exports = function(testApp){
         }).then(done);
       });
 
-      it("returns correct numbers of results @now", function(done){
+      it("returns correct numbers of results", function(done){
         testApp.request.get("/users",{ qs: { search: "J" } }).then(function(res){
           res.body.users.length.should.be.equal(5);
 
