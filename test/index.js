@@ -14,14 +14,16 @@ var should = require("should"),
 
 describe("Victor API", function(){
   var testOpt = {},
-      port = 7012;
+      port = 7012,
+      suitSandbox;
 
 
   before(function(done){
     this.timeout(10000);// the first run always times out; no idea why. consequent runs are ok
 
     setupEnv();
-    setupFsStubs();
+    
+    setupStubs(suitSandbox = sinon.sandbox.create());
     
     startService(port).then(function(clients){
       return ninja.connect({
@@ -41,10 +43,13 @@ describe("Victor API", function(){
     }).then(done);
   });
 
+  after(function(){
+    suitSandbox.restore();
+  });
+
   beforeEach(function(done){
     ninja.setupSandbox();
-    setupStubs(ninja);
-
+    
     ninja.fixture.create("users", {
       password: "password"
     }).then(function(data){
@@ -82,15 +87,24 @@ describe("Victor API", function(){
 
 
 
-function setupStubs(testApp){
-  testApp.sandbox.stub(
+function setupStubs(sandbox){
+  var fsStub = {
+    "fs": {
+      readFileSync: function(){ return "STUB"; }
+    }
+  };
+  
+  proxyquire("../routing-service/routes/status", fsStub);
+  proxyquire("../routing-service/routes/file", fsStub);
+  
+  sandbox.stub(
     require("../routing-service/lib/legacy-integration-service/legacyWrappers/charter-requests.js"),
     "postCharterRequest"
   ).returns(function(request){
     return when.resolve(request);
   });;
 
-  testApp.sandbox.stub(
+  sandbox.stub(
     require("../routing-service/lib/legacy-integration-service/controllers/users"),
     "postUser"
   ).returns(function(request){
@@ -102,17 +116,6 @@ function setupEnv(){
   _.extend(process.env,
            dotenv.parse(fs.readFileSync("./routing-service/.config/develop")),
            dotenv.parse(fs.readFileSync("./.env-override")));
-}
-
-function setupFsStubs(){
-  var fsStub = {
-    "fs": {
-      readFileSync: function(){ return "STUB"; }
-    }
-  };
-  
-  proxyquire("../routing-service/routes/status", fsStub);
-  proxyquire("../routing-service/routes/file", fsStub);
 }
 
 function startService(port){

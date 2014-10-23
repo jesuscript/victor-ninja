@@ -2,14 +2,14 @@ module.exports = {
   user: {
     "phone":"1234567890",
     "password":"password",
-    "firstName":"",
     "country":"UK",
     "title":"Mr",
     "languageCode":"en-GB",
     "email":"hoanglonguk+1231@gmail.com",
     "charterFrequency":{"min":1,"max":10},
     verifiedAt: new Date(),//TODO: make dynamic
-    "lastName":"Asddas",
+    "firstName":"Uncle",
+    "lastName":"Bob",
     additionalDetails: {
       legacyID: 1
     }
