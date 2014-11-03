@@ -11,7 +11,6 @@ var should = require("should"),
     proxyquire = require("proxyquire").noCallThru(),
     sinon = require("sinon");
 
-
 describe("Victor API", function(){
   var testOpt = {},
       port = 7012,
@@ -48,6 +47,8 @@ describe("Victor API", function(){
   });
 
   beforeEach(function(done){
+    setupEnv();//to reset env
+    
     ninja.setupSandbox();
     
     ninja.fixture.create("users", {
@@ -96,26 +97,35 @@ function setupStubs(sandbox){
   
   proxyquire("../routing-service/routes/status", fsStub);
   proxyquire("../routing-service/routes/file", fsStub);
-  
-  sandbox.stub(
-    require("../routing-service/lib/legacy-integration-service/legacyWrappers/charter-requests.js"),
-    "postCharterRequest"
-  ).returns(function(request){
-    return when.resolve(request);
-  });;
 
-  sandbox.stub(
-    require("../routing-service/lib/legacy-integration-service/controllers/users"),
-    "postUser"
-  ).returns(function(request){
-    return when.resolve(request.body);
-  });
+  var stubLISController = function(controller,method){
+    sandbox.stub(
+      require("../routing-service/lib/legacy-integration-service/controllers/" + controller),
+      method
+    ).returns(function(request){
+      return when.resolve(request.body);
+    });
+  };
+  
+  _([
+    ["users", "postUser"],
+    ["quote", "patchQuote"],
+    ["passengers","postPassenger"],
+    ["charter-requests", "postCharterRequest"]
+  ]).each(function(args){stubLISController.apply(null,args);});
 }
 
+var cachedEnv;
+
 function setupEnv(){
-  _.extend(process.env,
-           dotenv.parse(fs.readFileSync("./routing-service/.config/develop")),
-           dotenv.parse(fs.readFileSync("./.env-override")));
+  if(!cachedEnv){
+    cachedEnv = {
+    default: dotenv.parse(fs.readFileSync("./routing-service/.config/develop")),
+      override: dotenv.parse(fs.readFileSync("./.env-override"))
+    };
+  }
+
+  _.extend(process.env, cachedEnv.default, cachedEnv.override);
 }
 
 function startService(port){

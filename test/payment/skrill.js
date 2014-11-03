@@ -33,7 +33,10 @@ module.exports = function(testApp, opt){
       }).then(function(data){
         paymentProvider = data["payment-providers"][0];
 
-        return testApp.fixture.create("payment-types", {paymentProvider: paymentProvider.id});
+        return testApp.fixture.create("payment-types", {
+          paymentProvider: paymentProvider.id,
+          name: "amex"
+        });
       }).then(function(data){
         paymentType = data["payment-types"][0];
 
@@ -86,7 +89,11 @@ module.exports = function(testApp, opt){
       beforeEach(function(done){
         this.timeout(5000);
 
-        opt.createQuoteAndCharge({cvv: cvv, cardId: card.id}).then(function(data){
+        opt.createQuoteAndCharge({
+          cvv: cvv,
+          cardId: card.id,
+          paymentType:"amex"
+        }).then(function(data){
           quote = data.quote;
           charge = data.charge;
 

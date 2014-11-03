@@ -1,32 +1,46 @@
 var timedRequest = require(
-      "../../routing-service/lib/legacy-integration-service/legacyWrappers/timed-request.js"),
+  "../../routing-service/lib/legacy-integration-service/legacyWrappers/timed-request.js"),
     lisHelpers = require(
       "../../routing-service/lib/legacy-integration-service/legacyWrappers/helpers.js"),
     _ = require("lodash"),
     when = require("when");
 
+
 module.exports = function(testApp,parentOpt){
   describe("payment", function(){
     var opt = {
-      createQuoteAndCharge: function(chargeData){
+      createQuoteAndCharge: function(customOpt){
         var result = {};
 
-        chargeData = chargeData || {};
-        
-        return testApp.fixture.create("quotes", {
+        customOpt = customOpt || {};
+
+        return testApp.fixture.create("quotes", _.extend({
           user: opt.bob.id
-        }).then(function(data){
+        }, customOpt.quoteData)).then(function(data){
           result.quote = data.quotes[0];
+
+          return testApp.fortuneClient.getQuote(result.quote.id.toString(),{
+            include: "paymentFees"
+          });
+        }).then(function(data){
+          opt.mockLegacyTransactionItems({
+            amount: (result.total = _.find(data.linked["payment-fees"], function(fee){
+              return fee.links.paymentType === customOpt.paymentType;
+            }).total).amount.toFixed(4)
+          });
+
+          opt.mockLegacyPaymentConfirmation();
+
           return testApp.request.post({
             url: "/charges",
             json: {
               charges: [{
                 links: {
-                  card: chargeData.cardId,
-                  paymentType: chargeData.paymentType,
+                  card: customOpt.cardId,
+                  paymentType: customOpt.paymentType,
                   quote: result.quote.id
                 },
-                cvv: chargeData.cvv,
+                cvv: customOpt.cvv,
                 invoiceRequired: true
               }]
             }
@@ -53,18 +67,21 @@ module.exports = function(testApp,parentOpt){
         charge.refunded.should.be.equal(false);
         
         if(card) charge.providerReference.should.be.ok;
+      },
+      mockLegacyTransactionItems: function(fOpts){
+        fOpts = fOpts || {};
+        testApp.sandbox.stub(lisHelpers, "getResource", function(reqUrl){
+          return when(mockTransactionItems(fOpts));
+        });
+      },
+      mockLegacyPaymentConfirmation: function(){
+        testApp.sandbox.stub(timedRequest,"post",function(opt){
+          return when(mockPaymentConfirmation(opt));
+        });
       }
     };
 
     beforeEach(function(){
-      testApp.sandbox.stub(timedRequest,"post",function(opt){
-        return when(mockPaymentConfirmation(opt));
-      });
-
-      testApp.sandbox.stub(lisHelpers, "getResource", function(reqUrl){
-        return when(mockTransaction());
-      });
-
       _.extend(opt,parentOpt);
     });
 
@@ -72,9 +89,12 @@ module.exports = function(testApp,parentOpt){
   });
 
   function mockPaymentConfirmation(opt){
-    var amount = opt.qs.amountStr.replace(/,/g,"").replace(/\\/g,""),
-        currency = opt.qs.currency.replace(/,/g,"").replace(/\\/g,"");
-    
+    var cleanse = function(str){
+      return str.replace(/,/g,"").replace(/\\/g,"").replace(/'/g, "");
+    };
+    var amount = cleanse(opt.qs.amountStr),
+        currency = cleanse(opt.qs.currency);
+
     return {
       body: JSON.stringify({
         "SiteVersion": 2,
@@ -116,7 +136,9 @@ module.exports = function(testApp,parentOpt){
     };
   }
 
-  function mockTransaction(){
+  function mockTransactionItems(fOpts){
+    var paid = fOpts.amount || "1050.0000";
+    
     return {
       "value": [
         {
@@ -124,13 +146,13 @@ module.exports = function(testApp,parentOpt){
           "PaymentRuleTitle": null,
           "MarkUp": 0.0,
           "ExchangeRate": 1.0,
-          "TotalPaid": "1050.0000",
-          "Total": "1050.0000",
-          "Amount": "1050.0000",
+          "TotalPaid": paid,
+          "Total": paid,
+          "Amount": paid,
           "PaidCurrencyId": 2,
           "BaseCurrencyId": 2,
-          "BaseTotal": "1050.0000",
-          "BaseAmount": "1050.0000",
+          "BaseTotal": paid,
+          "BaseAmount": paid,
           "Quantity": 1,
           "Properties": null,
           "OrderTypeAssembly": "JetShare.Business.Payment.QuoteOrder, JetShare.Business, Version=1.0.4306.0, Culture=neutral, PublicKeyToken=null",

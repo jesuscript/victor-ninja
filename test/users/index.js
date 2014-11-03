@@ -1,18 +1,11 @@
 var when = require("when"),
     userSearch = require("../../routing-service/lib/user-service/components/user-search.js"),
-    _ = require("lodash"),
-    proxyquire = require("proxyquire");
+    _ = require("lodash");
 
 module.exports = function(testApp){
   describe("users", function(){
     describe("regex search", function(){
       var users;
-
-      before(function(){
-        testApp.fortuneClient.onRequest(function(config){
-          console.log(config);
-        });
-      });
 
       beforeEach(function(done){
         
@@ -55,7 +48,7 @@ module.exports = function(testApp){
         }).then(done);
       });
 
-      it("is case insensitive @now", function(done){
+      it("is case insensitive", function(done){
         testApp.request.get("/users",{qs:{search: "JoHnNy dEpP"}}).then(function(res){
           testJohnny(res);
         }).then(done);

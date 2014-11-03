@@ -46,5 +46,21 @@ module.exports = {
   "payment-type":{
     name: "visa",
     feePercent: 10
+  },
+  movement: {
+    isBooked: false,
+    isOperatorEmptyLeg: true
+  },
+  flight: {
+    deptDate: new Date(),
+    arrDate: new Date(),
+    duration: 0,
+    isPrivate: false,
+    isOperatorEmptyLeg: false,
+    flightNumber: "ABC123"
+  },
+  "quote-leg": {
+    deptDate: new Date(),
+    arrDate: new Date()
   }
 };

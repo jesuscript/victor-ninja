@@ -1,6 +1,34 @@
 var exec = require("child_process").exec,
     stripe = require("stripe")(process.env.STRIPE_SECRET_KEY || "sk_test_jh8IAZJpDKV8fi6o6PBNiVha");
 
+var testTransaction = function(trOpt){
+  describe("transaction", function(){
+    var transaction, transactionItems;
+    
+    beforeEach(function(done){
+      trOpt.testApp.fortuneClient.getTransactions({user: trOpt.opt.bob.id.toString()},{
+        include: "transactionItems"
+      }).then(function(data){
+        transaction = data.transactions[0];
+        transactionItems = data.linked["transaction-items"];
+        done();
+      });
+    });
+
+    it("should exist", function(){
+      transaction.should.be.ok;
+    });
+
+    it("should have a transaction item", function(){
+      transactionItems.length.should.be.equal(1);
+    });
+
+    it("should have correct amount paid", function(){
+      transaction.amountPaid.should.be.eql(trOpt.testData.total);
+    });
+  });
+};
+
 module.exports = function(testApp,opt){
   describe("using a card", function(){
     var cardToken,paymentProvider,paymentType,card,
@@ -77,52 +105,56 @@ module.exports = function(testApp,opt){
 
       it("stores stripe customer id on the user", function(done){
         testApp.request.get("/users/" + opt.bob.id).then(function(data){
-          console.log(data.body.users[0].additionalDetails);
           data.body.users[0].additionalDetails.stripeId.should.be.ok;
           done();
         });
       });
     });
 
-    describe("once paid", function(){
-      var quote, charge;
+    var ttArgs = {
+      testApp: testApp,
+      opt: opt
+    };
+
+    describe("once paid for a charter", function(){
+      var testData;
       
       beforeEach(function(done){
         this.timeout(5000);
 
-        opt.createQuoteAndCharge({cardId: card.id}).then(function(data){
-          quote = data.quote;
-          charge = data.charge;
-
+        opt.createQuoteAndCharge({cardId: card.id, paymentType: "visa"}).then(function(data){
+          ttArgs.testData = testData = data;
           done();
         });
       });
       
       it("creates a charge", function(){
-        opt.testCharge(charge,quote,card,paymentType);
+        opt.testCharge(testData.charge,testData.quote,card,paymentType);
       });
 
-      //DRY! 
-      describe("transaction", function(){
-        var transaction, transactionItems;
-        
-        beforeEach(function(done){
-          testApp.fortuneClient.getTransactions({user: opt.bob.id.toString()},{
-            include: "transactionItems"
-          }).then(function(data){
-            transaction = data.transactions[0];
-            transactionItems = data.linked["transaction-items"];
-            done();
-          });
-        });
+      testTransaction(ttArgs);
+    });
 
-        it("should exist", function(){
-          transaction.should.be.ok;
-        });
+    describe("once paid for an empty leg", function(){
+      var testData,mvmt;
 
-        it("should have a transaction item", function(){
-          transactionItems.length.should.be.equal(1);
+      beforeEach(function(done){
+        opt.createQuoteAndCharge({cardId: card.id, paymentType: "visa", quoteData: {
+          movements: testApp.fixture.create("movements",{isBooked:false}).then(function(data){
+            mvmt = data.movements[0];
+            return data;
+          }),
+          quoteType: "EmptyLeg"
+        }}).then(function(data){
+          ttArgs.testData = testData = data;
+          done();
         });
+      });
+
+      it("updates the movement to be booked", function(done){
+        testApp.fortuneClient.getMovement(mvmt.id.toString()).then(function(data){
+          data.movements[0].isBooked.should.be.equal(true);
+        }).catch(function(err){ console.trace(err); });;
       });
     });
   });
