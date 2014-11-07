@@ -45,7 +45,12 @@ module.exports = function(testApp,parentOpt){
               }]
             }
           });
-        }).then(function(){
+        }).then(function(data){
+          if(data.body.errors){
+            console.log("throw error", data.body);
+            throw new Error("couldn't create charge: "+data.body.errors[0].title);
+          }
+          
           return testApp.fortuneClient.getCharges({quote: result.quote.id.toString()});
         }).then(function(data){
           var charges = data.charges;

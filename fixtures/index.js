@@ -5,7 +5,7 @@ module.exports = {
     "country":"UK",
     "title":"Mr",
     "languageCode":"en-GB",
-    "email":"hoanglonguk+1231@gmail.com",
+    "email":"hoanglonguk+12314567@gmail.com",
     "charterFrequency":{"min":1,"max":10},
     verifiedAt: new Date(),//TODO: make dynamic
     "firstName":"Uncle",

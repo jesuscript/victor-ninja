@@ -47,6 +47,7 @@ describe("Victor API", function(){
   });
 
   beforeEach(function(done){
+    this.timeout(10000);
     setupEnv();//to reset env
     
     ninja.setupSandbox();
@@ -125,7 +126,8 @@ function setupEnv(){
     };
   }
 
-  _.extend(process.env, cachedEnv.default, cachedEnv.override);
+  //hmm.... is that actually safe?
+  process.env = _.extend({}, cachedEnv.default, cachedEnv.override);
 }
 
 function startService(port){

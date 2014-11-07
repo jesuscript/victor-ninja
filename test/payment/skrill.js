@@ -20,7 +20,7 @@ module.exports = function(testApp, opt){
           "params": {
             "account": {
               "number": "370000000000002",
-              "expiry": "10/2014",
+              "expiry": "10/2017",
               "cvv": cvv
             }
           },
@@ -78,7 +78,7 @@ module.exports = function(testApp, opt){
         card.expiresAt.should.be.eql({
           date: "" + tokenData.expiry_year + "-" + tokenData.expiry_month + "-01",
           time: "00:00",
-          timeZone: 0
+          timeZone: "+00:00"
         });
       });
     });
@@ -98,7 +98,7 @@ module.exports = function(testApp, opt){
           charge = data.charge;
 
           done();
-        });
+        }).done();
       });
 
       it("creates a charge", function(){
