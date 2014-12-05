@@ -51,23 +51,37 @@ describe("Victor API", function(){
     setupEnv();//to reset env
     
     ninja.setupSandbox();
-    
+
+    var oauth = process.env.CLIENT_KEYS.split(";")[0].split(":");
+
+    ninja.request.configure({
+      oauth: {
+        consumer_key: oauth[0],
+        consumer_secret: oauth[1]
+      }
+    });
+
     ninja.fixture.create("users", {
-      password: "password"
+      password: "password",
+      digitalAcquisitionChannel: {
+        content: "victory"
+      }
     }).then(function(data){
       testOpt.bob = _.extend(data.users[0], {password: "password"});
+
+      
 
       return ninja.fortuneClient.createUserAuthenticationToken({
         username: testOpt.bob.email,
         password: testOpt.bob.password
       });
     }).then(function(data){
-      var keystr = process.env.CLIENT_KEYS.split(";")[0].split(":");
+      
 
       ninja.request.configure({
         oauth: {
-          consumer_key: keystr[0],
-          consumer_secret: keystr[1]
+          consumer_key: oauth[0],
+          consumer_secret: oauth[1]
         },
         headers: {
           userauthtoken: data["user-authentication-tokens"][0].token
@@ -111,8 +125,8 @@ function setupStubs(sandbox){
   _([
     ["users", "postUser"],
     ["quote", "patchQuote"],
-    ["passengers","postPassenger"],
-    ["charter-requests", "postCharterRequest"]
+    ["passengers","postPassenger"]
+    //["charter-requests", "postCharterRequest"]
   ]).each(function(args){stubLISController.apply(null,args);});
 }
 
@@ -133,6 +147,9 @@ function setupEnv(){
 function startService(port){
   var service = app(false);
   // var workerService = worker(true); //disabled worker for now
+
+  //console.log("starting workers");
+  //require("../routing-service/esb-workers").init(service, true);
 
   console.log("starting the server");
   return when.promise(function(resolve){

@@ -4,6 +4,7 @@
   "description": "Victor API test suite",
   "dependencies":{
     "mocha": "~1.20.1",
+    "moment": "~2.8.3",
     "should": "~4.0.4",
     "sinon": "~1.10.2",
     "dotenv": "~0.4.0",
@@ -16,7 +17,8 @@
     "stripe": "~2.8.0",
     "rewire": "~2.1.0",
     "requesto": "~0.0.1",
-    "fortune-ninja": "~0.0.1"
+    "fortune-ninja": "~0.0.1",
+    "dnode": "~1.2.0"
   },
   "scripts": {
     "test": "node_modules/mocha/bin/mocha --recursive -R spec"

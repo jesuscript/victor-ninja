@@ -1,3 +1,5 @@
+var moment = require("moment");
+
 module.exports = {
   user: {
     "phone":"1234567890",
@@ -62,5 +64,8 @@ module.exports = {
   "quote-leg": {
     deptDate: new Date(),
     arrDate: new Date()
+  },
+  "request-leg": {
+    deptDate: moment().add(20, "days").toDate()
   }
 };

@@ -66,7 +66,8 @@ module.exports = function(testApp,parentOpt){
         charge.links.paymentType.should.equal(paymentType.id);
         
         charge.amount.amount.should.be.equal(
-          Math.round((1 + paymentType.feePercent/100) * quote.price.amount * 100) / 100
+          (Math.round((1 + paymentType.feePercent/100) * quote.price.amount * 100) / 100)
+            .toFixed(2)
         );
         charge.amount.currency.should.be.equal(quote.price.currency);
         charge.refunded.should.be.equal(false);

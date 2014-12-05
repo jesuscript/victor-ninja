@@ -5,14 +5,6 @@ module.exports = function(testApp,testOpt){
       password: "whatever"
     };
     
-    beforeEach(function(){
-      process.env.REJECT_NON_APP_APPROVED_USERS=true;
-      process.env.AUTO_APPROVE_CODES="VIC001;victory";
-    });
-
-    var testErrorResponse = function(res){
-    };
-    
     var countTokens = function(){
       return testApp.fortuneClient.getUserAuthenticationTokens().then(function(data){
         return data["user-authentication-tokens"].length;
@@ -77,7 +69,7 @@ module.exports = function(testApp,testOpt){
       });
 
       it("allows sending a refcode separately", function(done){
-        testApp.request.post("/users/refcode", {
+        testApp.request.post("/set-refcode", {
           json: {
             username: creds.username,
             password: creds.password,
@@ -96,8 +88,12 @@ module.exports = function(testApp,testOpt){
         });
       });
 
+      // it("does not allow patching the status onto the user", function(){
+        
+      // });
+
       it("rejects the refcode if credentials were wrong", function(done){
-        testApp.request.post("/users/refcode", {
+        testApp.request.post("/set-refcode", {
           json: {
             username: creds.username,
             password: "wrong password",
@@ -138,5 +134,6 @@ module.exports = function(testApp,testOpt){
         authResponse.body["user-authentication-tokens"].length.should.be.equal(1);
       });
     });
+
   });
 };

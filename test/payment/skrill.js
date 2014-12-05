@@ -7,6 +7,8 @@ module.exports = function(testApp, opt){
         cvv = 1234;
     
     beforeEach(function(done){
+      this.timeout(5000);
+      
       skrillRegUrl = process.env.SKRILL_JSON_RPC_URL + process.env.SKRILL_MERCHANT_ID + "/" +
         process.env.SKRILL_CREDITCARD_REGISTER_CHANNEL_ID + "/creditcard/",
       skrillCCUrl = process.env.SKRILL_JSON_RPC_URL + process.env.SKRILL_MERCHANT_ID + "/" +
@@ -28,7 +30,6 @@ module.exports = function(testApp, opt){
         }
       }).then(function(res){
         tokenData = res.body.result.account;
-        
         return testApp.fixture.create("payment-providers", {name: "skrill"});
       }).then(function(data){
         paymentProvider = data["payment-providers"][0];
@@ -104,7 +105,6 @@ module.exports = function(testApp, opt){
       it("creates a charge", function(){
         opt.testCharge(charge,quote,card,paymentType);
 
-        charge.cvv.should.be.equal(cvv);
         charge.additionalDetails.providerInfo.uniqueid.should.be.ok;
         charge.additionalDetails.providerInfo.shortid.should.be.ok;
         charge.additionalDetails.providerInfo.method.should.be.equal("creditcard");
@@ -115,9 +115,11 @@ module.exports = function(testApp, opt){
         var transaction, transactionItems;
         
         beforeEach(function(done){
-          testApp.fortuneClient.getTransactions({user: opt.bob.id.toString()},{
+          testApp.fortuneClient.getTransactions({},//{user: opt.bob.id.toString()},
+                                                {
             include: "transactionItems"
           }).then(function(data){
+            console.log(data);
             transaction = data.transactions[0];
             transactionItems = data.linked["transaction-items"];
             done();

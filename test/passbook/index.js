@@ -11,7 +11,7 @@ module.exports = function(testApp,testOpt){
         deptAirport: create("airports", {airportCode: "HUY"}),
         arrAirport: create("airports", {airportCode: "YUH"}),
         seatAllocations: create("seat-allocations", {
-          passenger: create("passengers")
+          passenger: create("passengers", {user: testOpt.bob.id})
         }),
         arrHandler: create("handlers", {name: "arr-hand"}),
         deptHandler: create("handlers", {name: "dept-hand"}),
@@ -29,6 +29,7 @@ module.exports = function(testApp,testOpt){
     });
 
     it("can be created", function(done){
+      this.timeout(2000);
       var createPass = passbookLogic.createPass;
       
       testApp.sandbox.stub(passbookLogic, "createPass", function(){
@@ -49,8 +50,7 @@ module.exports = function(testApp,testOpt){
         }
       }).then(function(res){
         res.body["passbook-passes"].length.should.be.equal(1);
-        done();
-      }).catch(function(err){ console.trace(err); });
+      }).done(done);
     });
   });
 };
